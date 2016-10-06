@@ -28,7 +28,7 @@ build:
 
   # https://bugreports.qt.io/browse/PYSIDE-321
   # -> need to backport https://code.qt.io/cgit/pyside/pyside.git/commit/?id=23d77136da1f249f0a78c8c7e8124adc8c604230
-  skip: true  # [osx or (win and py35)]
+  skip: true  # [win and py35]
 
 requirements:
   build:
