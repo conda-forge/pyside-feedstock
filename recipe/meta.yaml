@@ -35,12 +35,12 @@ requirements:
     - toolchain
     - python
     - cmake
-    - qt 4.8*
+    - qt 4.8.*
     - libxslt
 
   run:
     - python
-    - qt 4.8*
+    - qt 4.8.*
     - libxslt
 
 test:
