@@ -2,9 +2,9 @@
 
 if test `uname` = "Darwin"
 then
-  SO_EXT='.dylib'
+  SHLIB_EXT='.dylib'
 else
-  SO_EXT='.so'
+  SHLIB_EXT='.so'
 fi
 
 pushd sources/shiboken
@@ -12,7 +12,7 @@ mkdir -p build && cd build
 
 export QTDIR=${PREFIX}
 
-PY_LIB=`find $PREFIX/lib -name libpython${PY_VER}*${SO_EXT}`
+PY_LIB=`find $PREFIX/lib -name libpython${PY_VER}*${SHLIB_EXT}`
 PY_INC=`find $PREFIX/include -name python${PY_VER}*`
 
 cmake \
