@@ -15,20 +15,19 @@ source:
     # https://github.com/sparsehash/sparsehash/commit/7b8afad35bd601ea780b0f72e215de96613d3c95
     # https://codereview.qt-project.org/#/c/172583/
     - fix-vc2013-hash_map.patch
+    # https://bugreports.qt.io/browse/PYSIDE-321
+    # Backported https://code.qt.io/cgit/pyside/pyside.git/commit/?id=23d77136da1f249f0a78c8c7e8124adc8c604230
+    - fix-vs2015-4.8.patch
     # make the testsuite pass
     - disable-failing-tests.patch
 
 build:
-  number: 1
+  number: 2
   features:
     - vc9               # [win and py27]
     - vc10              # [win and py34]
     - vc14              # [win and py35]
   detect_binary_files_with_prefix: True
-
-  # https://bugreports.qt.io/browse/PYSIDE-321
-  # -> need to backport https://code.qt.io/cgit/pyside/pyside.git/commit/?id=23d77136da1f249f0a78c8c7e8124adc8c604230
-  skip: true  # [win and py35]
 
 requirements:
   build:
