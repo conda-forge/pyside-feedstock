@@ -1,0 +1,404 @@
+diff --git a/PySide/CMakeLists.txt b/PySide/CMakeLists.txt
+index fce5bb1..0bf3d3a 100644
+--- sources/pyside/PySide/CMakeLists.txt
++++ sources/pyside/PySide/CMakeLists.txt
+@@ -12,6 +12,61 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/__init__.py.in"
+ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/_utils.py.in"
+                "${CMAKE_CURRENT_BINARY_DIR}/_utils.py" @ONLY)
+ 
++#####
++# This macro was needed to skip classes which did not build, yet.
++# It replaces shiboken by a script that filters the missing classes
++# away of the xxx_module_wrapper.cpp file.
++# You can use it like so:
++#
++# skip_missing_classes(QtWidgets_SRC)
++# create_pyside_module(QtWidgets
++#                      ...
++#
++
++macro(skip_missing_classes sources)
++    # this line signals postprocessing to macro "create_pyside_module".
++    set(${sources}_skipped_files 1)
++    # you just need to pass exactly the same sources variable.
++    string(REPLACE ";" "\n" _escaped_sources "${${sources}}")
++    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/filter_init.py"
++         "if True: # allow the indentation
++    files = '''\n${_escaped_sources}\n'''.strip().split('\\n')
++    import sys, os, re, pprint
++    pprint.pprint(files)
++    nset = set()
++    for fname in files:
++        name = os.path.splitext(os.path.basename(fname))[0]
++        print(name)
++        if name.endswith('module_wrapper'):
++            fn = fname
++        else:
++            name = name.split('_wrapper')
++            assert name[1] == ''
++            nset.add(name[0])
++    print(fn)
++    with open(fn) as f:
++        lines = f.readlines()
++    removals = set()
++    for idx, line in enumerate(lines):
++        res = re.search(' init_(\\w+)', line)
++        if res and res.group(1).lower() not in nset:
++            removals.add(res.group(1))
++            lines[idx] = '//' + line
++    with open(fn, 'w') as f:
++        f.writelines(lines)
++    removals = sorted(list(removals))
++    print('Removals:', removals)
++    fix_header_fname = '${CMAKE_CURRENT_SOURCE_DIR}/fixup_headers.py'
++    if sys.platform == 'win32' and os.path.exists(fix_header_fname):
++        global target_dir
++        target_dir = '${${PROJECT_NAME}_GEN_DIR}'
++
++        with open(fix_header_fname) as f:
++            code = compile(f.read(), 'nebbich', 'exec')
++        exec(code, globals(), locals())
++    ")
++endmacro()
++
+ HAS_QT_MODULE(QT_QTCORE_FOUND QtCore)
+ HAS_QT_MODULE(QT_QTGUI_FOUND QtGui)
+ HAS_QT_MODULE(QT_QTNETWORK_FOUND QtNetwork)
+diff --git a/PySide/QtGui/CMakeLists.txt b/PySide/QtGui/CMakeLists.txt
+index 6e14706..a7cfbb8 100644
+--- sources/pyside/PySide/QtGui/CMakeLists.txt
++++ sources/pyside/PySide/QtGui/CMakeLists.txt
+@@ -427,6 +427,11 @@ set(QtGui_libraries   pyside
+                       ${QT_QTGUI_LIBRARY})
+ set(QtGui_deps "QtCore")
+ 
++if(WIN32)
++    # has a fix for VS2015
++    skip_missing_classes(QtGui_SRC)
++endif()
++
+ create_pyside_module(QtGui
+                      QtGui_include_dirs
+                      QtGui_libraries
+diff --git a/PySide/QtGui/fixup_headers.py b/PySide/QtGui/fixup_headers.py
+new file mode 100644
+index 0000000..ec74870
+--- /dev/null
++++ sources/pyside/PySide/QtGui/fixup_headers.py
+@@ -0,0 +1,78 @@
++#############################################################################
++##
++## Copyright (C) 2016 The Qt Company Ltd.
++## Contact: https://www.qt.io/licensing/
++##
++## This file is part of PySide2.
++##
++## $QT_BEGIN_LICENSE:LGPL$
++## Commercial License Usage
++## Licensees holding valid commercial Qt licenses may use this file in
++## accordance with the commercial license agreement provided with the
++## Software or, alternatively, in accordance with the terms contained in
++## a written agreement between you and The Qt Company. For licensing terms
++## and conditions see https://www.qt.io/terms-conditions. For further
++## information use the contact form at https://www.qt.io/contact-us.
++##
++## GNU Lesser General Public License Usage
++## Alternatively, this file may be used under the terms of the GNU Lesser
++## General Public License version 3 as published by the Free Software
++## Foundation and appearing in the file LICENSE.LGPL3 included in the
++## packaging of this file. Please review the following information to
++## ensure the GNU Lesser General Public License version 3 requirements
++## will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
++##
++## GNU General Public License Usage
++## Alternatively, this file may be used under the terms of the GNU
++## General Public License version 2.0 or (at your option) the GNU General
++## Public license version 3 or any later version approved by the KDE Free
++## Qt Foundation. The licenses are as published by the Free Software
++## Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
++## included in the packaging of this file. Please review the following
++## information to ensure the GNU General Public License requirements will
++## be met: https://www.gnu.org/licenses/gpl-2.0.html and
++## https://www.gnu.org/licenses/gpl-3.0.html.
++##
++## $QT_END_LICENSE$
++##
++#############################################################################
++
++from __future__ import print_function
++
++"""
++This script adds a constructor to wrappers where the constructor
++of the base class is not reachable (private).
++
++It is run via the equivalent of an execfile command.
++This patch became necessary when VS2015 became the standard compiler.
++"""
++
++import os
++
++def patch(fname, snippet, path=target_dir):
++    fpath = os.path.join(path, fname)
++    with open(fpath, 'r') as f:
++        lines = f.readlines()
++    for idx, line in enumerate(lines):
++        if line.rstrip() == "public:":
++            break
++    else:
++        raise SyntaxError("no public section found")
++    lines[idx+1:idx+1] = snippet
++    with open(fpath, 'w') as f:
++        f.writelines(lines)
++    print("+++ patched file:", fpath)
++
++snippets = {
++    "qclipboard_wrapper.h" : """\
++    QClipboardWrapper(QObject *parent);
++    ~QClipboardWrapper();
++""",
++    "qsessionmanager_wrapper.h" : """\
++    QSessionManagerWrapper(QApplication *app, QString &id, QString &key);
++    ~QSessionManagerWrapper();
++""",
++}
++
++for snippet, addition in snippets.items():
++    patch(snippet, addition)
+diff --git a/PySide/QtHelp/CMakeLists.txt b/PySide/QtHelp/CMakeLists.txt
+index 041ef63..9ccd30b 100644
+--- sources/pyside/PySide/QtHelp/CMakeLists.txt
++++ sources/pyside/PySide/QtHelp/CMakeLists.txt
+@@ -33,6 +33,11 @@ set(QtHelp_libraries  pyside
+                       ${QT_QTHELP_LIBRARY})
+ set(QtHelp_deps QtGui)
+ 
++if(WIN32)
++    # has a fix for VS2015
++    skip_missing_classes(QtHelp_SRC)
++endif()
++
+ create_pyside_module(QtHelp
+                      QtHelp_include_dirs
+                      QtHelp_libraries
+diff --git a/PySide/QtHelp/fixup_headers.py b/PySide/QtHelp/fixup_headers.py
+new file mode 100644
+index 0000000..d25b04b
+--- /dev/null
++++ sources/pyside/PySide/QtHelp/fixup_headers.py
+@@ -0,0 +1,74 @@
++#############################################################################
++##
++## Copyright (C) 2016 The Qt Company Ltd.
++## Contact: https://www.qt.io/licensing/
++##
++## This file is part of PySide2.
++##
++## $QT_BEGIN_LICENSE:LGPL$
++## Commercial License Usage
++## Licensees holding valid commercial Qt licenses may use this file in
++## accordance with the commercial license agreement provided with the
++## Software or, alternatively, in accordance with the terms contained in
++## a written agreement between you and The Qt Company. For licensing terms
++## and conditions see https://www.qt.io/terms-conditions. For further
++## information use the contact form at https://www.qt.io/contact-us.
++##
++## GNU Lesser General Public License Usage
++## Alternatively, this file may be used under the terms of the GNU Lesser
++## General Public License version 3 as published by the Free Software
++## Foundation and appearing in the file LICENSE.LGPL3 included in the
++## packaging of this file. Please review the following information to
++## ensure the GNU Lesser General Public License version 3 requirements
++## will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
++##
++## GNU General Public License Usage
++## Alternatively, this file may be used under the terms of the GNU
++## General Public License version 2.0 or (at your option) the GNU General
++## Public license version 3 or any later version approved by the KDE Free
++## Qt Foundation. The licenses are as published by the Free Software
++## Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
++## included in the packaging of this file. Please review the following
++## information to ensure the GNU General Public License requirements will
++## be met: https://www.gnu.org/licenses/gpl-2.0.html and
++## https://www.gnu.org/licenses/gpl-3.0.html.
++##
++## $QT_END_LICENSE$
++##
++#############################################################################
++
++from __future__ import print_function
++
++"""
++This script adds a constructor to wrappers where the constructor
++of the base class is not reachable (private).
++
++It is run via the equivalent of an execfile command.
++This patch became necessary when VS2015 became the standard compiler.
++"""
++
++import os
++
++def patch(fname, snippet, path=target_dir):
++    fpath = os.path.join(path, fname)
++    with open(fpath, 'r') as f:
++        lines = f.readlines()
++    for idx, line in enumerate(lines):
++        if line.rstrip() == "public:":
++            break
++    else:
++        raise SyntaxError("no public section found")
++    lines[idx+1:idx+1] = snippet
++    with open(fpath, 'w') as f:
++        f.writelines(lines)
++    print("+++ patched file:", fpath)
++
++snippets = {
++    "qhelpindexmodel_wrapper.h" : """\
++    QHelpIndexModelWrapper(QHelpEnginePrivate *helpEngine);
++    ~QHelpIndexModelWrapper();
++""",
++}
++
++for snippet, addition in snippets.items():
++    patch(snippet, addition)
+diff --git a/PySide/QtWebKit/CMakeLists.txt b/PySide/QtWebKit/CMakeLists.txt
+index 74d89f8..91f1db9 100644
+--- sources/pyside/PySide/QtWebKit/CMakeLists.txt
++++ sources/pyside/PySide/QtWebKit/CMakeLists.txt
+@@ -58,6 +58,12 @@ set(QtWebKit_libraries      pyside
+                             ${QT_QTNETWORK_LIBRARY}
+                             ${QT_QTGUI_LIBRARY})
+ set(QtWebKit_deps QtGui QtNetwork)
++
++if(WIN32)
++    # has a fix for VS2015
++    skip_missing_classes(QtWebKit_SRC)
++endif()
++
+ create_pyside_module(QtWebKit
+                      QtWebkit_include_dirs
+                      QtWebKit_libraries
+diff --git a/PySide/QtWebKit/fixup_headers.py b/PySide/QtWebKit/fixup_headers.py
+new file mode 100644
+index 0000000..fd256fd
+--- /dev/null
++++ sources/pyside/PySide/QtWebKit/fixup_headers.py
+@@ -0,0 +1,75 @@
++#############################################################################
++##
++## Copyright (C) 2016 The Qt Company Ltd.
++## Contact: https://www.qt.io/licensing/
++##
++## This file is part of PySide2.
++##
++## $QT_BEGIN_LICENSE:LGPL$
++## Commercial License Usage
++## Licensees holding valid commercial Qt licenses may use this file in
++## accordance with the commercial license agreement provided with the
++## Software or, alternatively, in accordance with the terms contained in
++## a written agreement between you and The Qt Company. For licensing terms
++## and conditions see https://www.qt.io/terms-conditions. For further
++## information use the contact form at https://www.qt.io/contact-us.
++##
++## GNU Lesser General Public License Usage
++## Alternatively, this file may be used under the terms of the GNU Lesser
++## General Public License version 3 as published by the Free Software
++## Foundation and appearing in the file LICENSE.LGPL3 included in the
++## packaging of this file. Please review the following information to
++## ensure the GNU Lesser General Public License version 3 requirements
++## will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
++##
++## GNU General Public License Usage
++## Alternatively, this file may be used under the terms of the GNU
++## General Public License version 2.0 or (at your option) the GNU General
++## Public license version 3 or any later version approved by the KDE Free
++## Qt Foundation. The licenses are as published by the Free Software
++## Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
++## included in the packaging of this file. Please review the following
++## information to ensure the GNU General Public License requirements will
++## be met: https://www.gnu.org/licenses/gpl-2.0.html and
++## https://www.gnu.org/licenses/gpl-3.0.html.
++##
++## $QT_END_LICENSE$
++##
++#############################################################################
++
++from __future__ import print_function
++
++"""
++This script adds a constructor to wrappers where the constructor
++of the base class is not reachable (private).
++
++It is run via the equivalent of an execfile command.
++This patch became necessary when VS2015 became the standard compiler.
++"""
++
++import os
++
++def patch(fname, snippet, path=target_dir):
++    fpath = os.path.join(path, fname)
++    with open(fpath, 'r') as f:
++        lines = f.readlines()
++    for idx, line in enumerate(lines):
++        if line.rstrip() == "public:":
++            break
++    else:
++        raise SyntaxError("no public section found")
++    lines[idx+1:idx+1] = snippet
++    with open(fpath, 'w') as f:
++        f.writelines(lines)
++    print("+++ patched file:", fpath)
++
++snippets = {
++    "qwebframe_wrapper.h" : """\
++    QWebFrameWrapper(QWebPage *parent, QWebFrameData *frameData);
++    QWebFrameWrapper(QWebFrame *parent, QWebFrameData *frameData);
++    ~QWebFrameWrapper();
++""",
++}
++
++for snippet, addition in snippets.items():
++    patch(snippet, addition)
+diff --git a/cmake/Macros/PySideModules.cmake b/cmake/Macros/PySideModules.cmake
+index 2fe6cd1..6bea898 100644
+--- sources/pyside/cmake/Macros/PySideModules.cmake
++++ sources/pyside/cmake/Macros/PySideModules.cmake
+@@ -19,6 +19,17 @@ macro(create_pyside_module module_name module_include_dir module_libraries modul
+         set(typesystem_path ${typesystem_name})
+     endif()
+ 
++    # check for class files that were commented away.
++    if(DEFINED ${module_sources}_skipped_files)
++        set(_python_interpreter "${SHIBOKEN_PYTHON_INTERPRETER}")
++        if(NOT _python_interpreter)
++            message(FATAL_ERROR "*** we need a python interpreter for postprocessing!")
++        endif()
++        set(_python_postprocessor "${_python_interpreter}" "${CMAKE_CURRENT_BINARY_DIR}/filter_init.py")
++    else()
++        set(_python_postprocessor "")
++    endif()
++
+     add_custom_command(OUTPUT ${${module_sources}}
+                         COMMAND ${SHIBOKEN_BINARY} ${GENERATOR_EXTRA_FLAGS}
+                         ${pyside_BINARY_DIR}/pyside_global.h
+@@ -29,6 +40,7 @@ macro(create_pyside_module module_name module_include_dir module_libraries modul
+                         ${typesystem_path}
+                         --api-version=${SUPPORTED_QT_VERSION}
+                         --drop-type-entries="${dropped_entries}"
++                        COMMAND ${_python_postprocessor}
+                         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                         COMMENT "Running generator for ${module_name}...")
+ 
+@@ -116,8 +128,13 @@ endmacro()
+ 
+ 
+ # Only add subdirectory if the associated Qt module is found.
++# As a side effect, this macro now also defines the variable ${name}_GEN_DIR
++# and must be called for every subproject.
+ macro(HAS_QT_MODULE var name)
+     if (NOT DISABLE_${name} AND ${var})
++        # we keep the PySide name here because this is compiled into shiboken
++        set(${name}_GEN_DIR ${CMAKE_CURRENT_BINARY_DIR}/${name}/PySide/${name}
++            CACHE INTERNAL "dir with generated source" FORCE)
+         add_subdirectory(${name})
+     else()
+         # Used on documentation to skip modules
