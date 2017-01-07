@@ -1,14 +1,7 @@
 #!/bin/sh
 
-if test `uname` = "Darwin"
-then
-  SHLIB_EXT='.dylib'
-else
-  SHLIB_EXT='.so'
-fi
-
 pushd sources/shiboken
-mkdir -p build && cd build
+mkdir build && cd build
 
 export QTDIR=${PREFIX}
 
@@ -31,7 +24,7 @@ make install -j${CPU_COUNT}
 popd
 pushd sources/pyside
 
-mkdir -p build && cd build
+mkdir build && cd build
 
 cmake \
   -DCMAKE_FIND_ROOT_PATH=${PREFIX} \
