@@ -12,6 +12,7 @@ env:
     - CONDA_PY=27
     - CONDA_PY=34
     - CONDA_PY=35
+    - CONDA_PY=36
   global:
     # The BINSTAR_TOKEN secure variable. This is defined canonically in conda-forge.yml.
     - secure: "OOy/t6+vcotdapd5JawO7gDNmLsynisB6EftCkVeXURUyAwvXQ4OZjaLODQdVi4d1RsGFSoFerXT6Oa3ZiFgye5C5yAmIEX7peRLoKJYtce/1oHbeQgT2ht0EF9pTw9PL/VtxpF0YQmxwsLWkSDsdNgEUQXf13UYtgPwswalsL7V9YEvlzj0/Kx3hLcp30iKUFbAvc9E/Ry4OAVmKhb/nRth1aQDoZOlwhdfe/9nGkSyK8xAPsrrFBFe/nd7NRaKaHJOFWjs3OcbIeGOdhyBiCPJgDkCmKscH2j3EN9UMRT9D7Nk0/9WdDSk3jYuE16jxuStzn/ghHw9jOwO9tyykedu1HtYGd3qYeEGs62S51nlGnYneywksrdb/trsRoKAejnCvWOET2KV3+kBas1qW5eSWeXAc5Q/9s/iUrgjaEGx1BBO2QlQYajed93ipiBPqIdTL+t1hx75umxAy9LFiNPBY93KWxGu6JjCrlLiG4QK6BGw3QOF/XOnQmb06LD8+AYo+an9nD2SYgKpYsPA7PRL7HgAxMwoyK1zQYAjQWwI+9+QU7ni/9fOUpqV6g/adWhR83kWN12lHncuDYC++vWNZHLO/GyWB8hDqfmLdTRHYyJZDEbxm/scitJ60WsWkwx/WCL1gQ29XYVg9cvl6ehsJMgJIHa2tbDe78Fp++k="
@@ -36,14 +37,7 @@ install:
       conda install --yes --quiet conda-forge-build-setup
       source run_conda_forge_build_setup
 
-      # install conda-build 2.x to build with a long prefix
-      conda install --yes --quiet conda-build=2
-      conda info
-
 script:
   - conda build ./recipe
 
   - upload_or_check_non_existence ./recipe conda-forge --channel=main
-
-  # inspect the prefix lengths of the built packages
-  - conda inspect prefix-lengths /Users/travis/miniconda3/conda-bld/osx-64/*.tar.bz2
