@@ -1,4 +1,12 @@
+
+
+python setup.py install --single-version-externally-managed --record=record.txt
+
+exit 0
+
 rem  @echo off
+
+
 
 set CMAKE_CONFIG="Release"
 
