@@ -9,7 +9,7 @@ PY_LIB=`find $PREFIX/lib -name libpython${PY_VER}*${SHLIB_EXT}`
 PY_INC=`find $PREFIX/include -name python${PY_VER}*`
 
 cmake \
-  -DCMAKE_FIND_ROOT_PATH=${PREFIX} \
+  -DCMAKE_PREFIX_PATH=${PREFIX} \
   -DCMAKE_INSTALL_PREFIX=${PREFIX} \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_INSTALL_RPATH=${PREFIX}/lib \
@@ -23,11 +23,10 @@ make install -j${CPU_COUNT}
 
 popd
 pushd sources/pyside
-
 mkdir build && cd build
 
 cmake \
-  -DCMAKE_FIND_ROOT_PATH=${PREFIX} \
+  -DCMAKE_PREFIX_PATH=${PREFIX} \
   -DCMAKE_INSTALL_PREFIX=${PREFIX} \
   -DCMAKE_BUILD_TYPE=Release \
   ..
@@ -40,3 +39,15 @@ else
   # create a single X server connection rather than one for each test using the PySide USE_XVFB cmake option
   xvfb-run ctest -j${CPU_COUNT} --output-on-failure --timeout 200
 fi
+
+popd
+pushd sources/pyside-tools
+mkdir build && cd build
+
+cmake \
+  -DCMAKE_PREFIX_PATH=${PREFIX} \
+  -DCMAKE_INSTALL_PREFIX=${PREFIX} \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DBUILD_TESTS=OFF \
+  ..
+make install -j${CPU_COUNT}
