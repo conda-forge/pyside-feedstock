@@ -22,7 +22,7 @@ source:
     - disable-failing-tests.patch
 
 build:
-  number: 4
+  number: 5
   features:
     - vc9  # [win and py27]
     - vc10  # [win and py34]
@@ -64,6 +64,7 @@ test:
     - pysideuic
   commands:
     - pyside-lupdate -help
+    - pyside-uic -help
 
 about:
   home: https://wiki.qt.io/PySide
