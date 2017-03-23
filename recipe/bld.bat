@@ -28,7 +28,7 @@ mkdir build && cd build
 cmake -LAH -G"NMake Makefiles"                               ^
     -DCMAKE_PREFIX_PATH="%LIBRARY_PREFIX%"                   ^
     -DCMAKE_INSTALL_PREFIX="%LIBRARY_PREFIX%"                ^
-    -DSITE_PACKAGE="%SP_DIR%"                                ^
+    -DSITE_PACKAGE="%SP_DIR:\=/%"                            ^
     -DCMAKE_BUILD_TYPE=Release                               ^
     ..
 if errorlevel 1 exit 1
