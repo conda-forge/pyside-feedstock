@@ -22,10 +22,9 @@ source:
     - disable-failing-tests.patch
 
 build:
-  number: 5
+  number: 6
   features:
     - vc9  # [win and py27]
-    - vc10  # [win and py34]
     - vc14  # [win and py>=35]
   detect_binary_files_with_prefix: True
 
@@ -36,11 +35,14 @@ requirements:
     - cmake
     - qt 4.8.*
     - libxslt
-
+    - vc 9  # [win and py27]
+    - vc 14  # [win and py>=35]
   run:
     - python
     - qt 4.8.*
     - libxslt
+    - vc 9  # [win and py27]
+    - vc 14  # [win and py>=35]
 
 test:
   imports:
