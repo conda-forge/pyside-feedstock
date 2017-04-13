@@ -34,8 +34,7 @@ make install -j${CPU_COUNT}
 
 if test `uname` = "Darwin"
 then
-  # FIXME: restore phonon tests
-  DYLD_FALLBACK_LIBRARY_PATH=${PREFIX}/lib ctest -j${CPU_COUNT} --output-on-failure --timeout 200 -E phonon
+  DYLD_FALLBACK_LIBRARY_PATH=${PREFIX}/lib ctest -j${CPU_COUNT} --output-on-failure --timeout 200
 else
   # create a single X server connection rather than one for each test using the PySide USE_XVFB cmake option
   xvfb-run ctest -j${CPU_COUNT} --output-on-failure --timeout 200
