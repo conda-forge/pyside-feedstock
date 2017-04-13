@@ -62,8 +62,7 @@ test:
     - PySide.QtXml
     - PySide.QtXmlPatterns
     - PySide.QtOpenGL
-    #FIXME:- PySide.phonon  # [not linux]
-    - PySide.phonon  # [win]
+    - PySide.phonon  # [not linux]
     - pysideuic
   commands:
     - pyside-lupdate -help
