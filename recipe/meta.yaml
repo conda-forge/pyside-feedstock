@@ -20,9 +20,11 @@ source:
     - fix-vs2015-4.8.patch
     # make the testsuite pass
     - disable-failing-tests.patch
+    # https://bugreports.qt.io/browse/PYSIDE-103
+    - wrapinstance-overflow.patch
 
 build:
-  number: 6
+  number: 7
   features:
     - vc9  # [win and py27]
     - vc14  # [win and py>=35]
