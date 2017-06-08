@@ -7,7 +7,7 @@ package:
 source:
   fn: PySide-{{ version }}.tar.gz
   url: https://pypi.python.org/packages/source/P/PySide/PySide-{{ version }}.tar.gz
-  md5: 3cb7174c13bd45e3e8f77638926cb8c0
+  sha256: 1421bc1bf612c396070de9e1ffe227c07c1f3129278bc7d30c754b5146be2433
   patches:
     # eliminate spurious shiboken stderr output to avoid the 4MB log limit on Travis
     # https://codereview.qt-project.org/#/c/172582/
@@ -20,9 +20,11 @@ source:
     - fix-vs2015-4.8.patch
     # make the testsuite pass
     - disable-failing-tests.patch
+    # https://bugreports.qt.io/browse/PYSIDE-103
+    - wrapinstance-overflow.patch
 
 build:
-  number: 6
+  number: 7
   features:
     - vc9  # [win and py27]
     - vc14  # [win and py>=35]
@@ -70,7 +72,7 @@ test:
 
 about:
   home: https://wiki.qt.io/PySide
-  license: LGPLv3
+  license: LGPL3
   license_file: sources/pyside/COPYING
   summary: Python bindings for Qt
 
