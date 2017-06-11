@@ -22,9 +22,11 @@ source:
     - disable-failing-tests.patch
     # https://bugreports.qt.io/browse/PYSIDE-103
     - wrapinstance-overflow.patch
+    # https://github.com/looooo/pivy/issues/18
+    - win_pointer_conversion_fix.patch  # [win]
 
 build:
-  number: 7
+  number: 8
   features:
     - vc9  # [win and py27]
     - vc14  # [win and py>=35]

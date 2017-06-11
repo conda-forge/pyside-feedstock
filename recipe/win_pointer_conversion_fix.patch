@@ -1,0 +1,50 @@
+diff --git a/sources/shiboken/libshiboken/conversions.h b/sources/shiboken/libshiboken/conversions.h
+index 8b58886..21686c6 100644
+--- a/sources/shiboken/libshiboken/conversions.h
++++ b/sources/shiboken/libshiboken/conversions.h
+@@ -435,14 +435,14 @@ struct Converter<unsigned PY_LONG_LONG>
+     }
+     static inline unsigned PY_LONG_LONG toCpp(PyObject* pyobj)
+     {
+-        if (PyInt_Check(pyobj)) {
++        /* if (PyInt_Check(pyobj)) {
+             long result = (unsigned PY_LONG_LONG) PyInt_AsLong(pyobj);
+             if (result < 0) {
+                 PyErr_SetObject(PyExc_OverflowError, 0);
+                 return 0;
+             } else
+                 return (unsigned PY_LONG_LONG) result;
+-        } else if (PyLong_Check(pyobj)) {
++        } else */ if (PyLong_Check(pyobj)) {
+             return (unsigned PY_LONG_LONG) PyLong_AsUnsignedLongLong(pyobj);
+         } else {
+             PyErr_SetString(PyExc_TypeError, "Invalid type for unsigned long long conversion");
+@@ -461,7 +461,7 @@ struct Converter_PyFloat
+     static inline PyFloatEquiv toCpp(PyObject* pyobj)
+     {
+         if (PyInt_Check(pyobj) || PyLong_Check(pyobj))
+-            return (PyFloatEquiv) PyLong_AsLong(pyobj);
++            return (PyFloatEquiv) PyLong_AsLongLong(pyobj);
+         return (PyFloatEquiv) PyFloat_AsDouble(pyobj);
+     }
+ };
+diff --git a/sources/shiboken/libshiboken/sbkconverter_p.h b/sources/shiboken/libshiboken/sbkconverter_p.h
+index 099f117..366dc96 100644
+--- a/sources/shiboken/libshiboken/sbkconverter_p.h
++++ b/sources/shiboken/libshiboken/sbkconverter_p.h
+@@ -251,13 +251,13 @@ struct Primitive<unsigned PY_LONG_LONG> : OnePrimitive<unsigned PY_LONG_LONG>
+     }
+     static void toCpp(PyObject* pyIn, void* cppOut)
+     {
+-        if (PyInt_Check(pyIn)) {
++        /* if (PyInt_Check(pyIn)) {
+             long result = (unsigned PY_LONG_LONG) PyInt_AsLong(pyIn);
+             if (result < 0)
+                 PyErr_SetObject(PyExc_OverflowError, 0);
+             else
+                 *((unsigned PY_LONG_LONG*)cppOut) = (unsigned PY_LONG_LONG) result;
+-        } else if (PyLong_Check(pyIn)) {
++        } else */ if (PyLong_Check(pyIn)) {
+             *((unsigned PY_LONG_LONG*)cppOut) = (unsigned PY_LONG_LONG) PyLong_AsUnsignedLongLong(pyIn);
+         } else {
+             PyErr_SetString(PyExc_TypeError, "Invalid type for unsigned long long conversion");
