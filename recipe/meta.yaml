@@ -26,27 +26,22 @@ source:
     - win_pointer_conversion_fix.patch  # [win]
 
 build:
-  number: 8
-  features:
-    - vc9  # [win and py27]
-    - vc14  # [win and py>=35]
+  number: 9
   detect_binary_files_with_prefix: True
 
 requirements:
   build:
-    - toolchain
-    - python
     - cmake
-    - qt 4.8.*
+    - {{ compiler('c') }}
+    - {{ compiler('cxx') }}
+  host:
+    - python
+    - qt
     - libxslt
-    - vc 9  # [win and py27]
-    - vc 14  # [win and py>=35]
   run:
     - python
-    - qt 4.8.*
+    - qt
     - libxslt
-    - vc 9  # [win and py27]
-    - vc 14  # [win and py>=35]
 
 test:
   imports:

@@ -3,7 +3,7 @@ About pyside
 
 Home: https://wiki.qt.io/PySide
 
-Package license: LGPLv3
+Package license: LGPL3
 
 Feedstock license: BSD 3-Clause
 
@@ -14,14 +14,16 @@ Summary: Python bindings for Qt
 Current build status
 ====================
 
-Linux: [![Circle CI](https://circleci.com/gh/conda-forge/pyside-feedstock.svg?style=shield)](https://circleci.com/gh/conda-forge/pyside-feedstock)
-OSX: [![TravisCI](https://travis-ci.org/conda-forge/pyside-feedstock.svg?branch=master)](https://travis-ci.org/conda-forge/pyside-feedstock)
-Windows: [![AppVeyor](https://ci.appveyor.com/api/projects/status/github/conda-forge/pyside-feedstock?svg=True)](https://ci.appveyor.com/project/conda-forge/pyside-feedstock/branch/master)
+[![Linux](https://img.shields.io/circleci/project/github/conda-forge/pyside-feedstock/master.svg?label=Linux)](https://circleci.com/gh/conda-forge/pyside-feedstock)
+[![OSX](https://img.shields.io/travis/conda-forge/pyside-feedstock/master.svg?label=macOS)](https://travis-ci.org/conda-forge/pyside-feedstock)
+[![Windows](https://img.shields.io/appveyor/ci/conda-forge/pyside-feedstock/master.svg?label=Windows)](https://ci.appveyor.com/project/conda-forge/pyside-feedstock/branch/master)
 
 Current release info
 ====================
-Version: [![Anaconda-Server Badge](https://anaconda.org/conda-forge/pyside/badges/version.svg)](https://anaconda.org/conda-forge/pyside)
-Downloads: [![Anaconda-Server Badge](https://anaconda.org/conda-forge/pyside/badges/downloads.svg)](https://anaconda.org/conda-forge/pyside)
+
+| Name | Downloads | Version | Platforms |
+| --- | --- | --- | --- |
+| [![Conda Recipe](https://img.shields.io/badge/recipe-pyside-green.svg)](https://anaconda.org/conda-forge/pyside) | [![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/pyside.svg)](https://anaconda.org/conda-forge/pyside) | [![Conda Version](https://img.shields.io/conda/vn/conda-forge/pyside.svg)](https://anaconda.org/conda-forge/pyside) | [![Conda Platforms](https://img.shields.io/conda/pn/conda-forge/pyside.svg)](https://anaconda.org/conda-forge/pyside) |
 
 Installing pyside
 =================
@@ -66,6 +68,7 @@ To manage the continuous integration and simplify feedstock maintenance
 Using the ``conda-forge.yml`` within this repository, it is possible to re-render all of
 this feedstock's supporting files (e.g. the CI configuration files) with ``conda smithy rerender``.
 
+For more information please check the [conda-forge documentation](https://conda-forge.org/docs/).
 
 Terminology
 ===========
