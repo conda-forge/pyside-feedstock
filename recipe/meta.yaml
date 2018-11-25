@@ -26,7 +26,7 @@ source:
     - win_pointer_conversion_fix.patch  # [win]
 
 build:
-  number: 8
+  number: 1008
   features:
     - vc9  # [win and py27]
     - vc14  # [win and py>=35]
