@@ -27,26 +27,21 @@ source:
 
 build:
   number: 1008
-  features:
-    - vc9  # [win and py27]
-    - vc14  # [win and py>=35]
   detect_binary_files_with_prefix: True
 
 requirements:
   build:
-    - toolchain
-    - python
     - cmake
+    - {{ compiler('c') }}
+    - {{ compiler('cxx') }}
+  build:
+    - python
     - qt 4.8.*
     - libxslt
-    - vc 9  # [win and py27]
-    - vc 14  # [win and py>=35]
   run:
     - python
     - qt 4.8.*
     - libxslt
-    - vc 9  # [win and py27]
-    - vc 14  # [win and py>=35]
 
 test:
   imports:
